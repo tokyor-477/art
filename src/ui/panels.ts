@@ -100,11 +100,33 @@ export function setupPanels(cb: PanelCallbacks) {
 export function currentStyle(): Style {
   return {
     fill: input("fill-on").checked ? input("fill-color").value : null,
+    fill2: input("fill-color2").value,
+    fillType: $<HTMLSelectElement>("fill-type").value as Style["fillType"],
     stroke: input("stroke-on").checked ? input("stroke-color").value : null,
     strokeWidth: Number(input("stroke-width").value) || 1,
     cap: $<HTMLSelectElement>("cap").value,
     join: $<HTMLSelectElement>("join").value,
+    opacity: Number(input("opacity").value) / 100,
+    blend: $<HTMLSelectElement>("blend").value,
+    dash: input("dash").checked,
   };
+}
+
+export function currentFontSize(): number {
+  return Number(input("font-size").value) || 32;
+}
+
+/** スタイル入力の変更を選択中アイテムに反映する(mainが配線) */
+export function onStyleChange(fn: () => void) {
+  const ids = [
+    "fill-on", "fill-color", "fill-type", "fill-color2",
+    "stroke-on", "stroke-color", "stroke-width", "cap", "join",
+    "opacity", "blend", "dash",
+  ];
+  for (const id of ids) {
+    // changeイベント(確定時)のみ。inputだとスライダードラッグで履歴が溢れる
+    $(id).addEventListener("change", fn);
+  }
 }
 
 export function setPickedColors(fill: string | null, stroke: string | null) {

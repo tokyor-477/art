@@ -1,5 +1,6 @@
 import paper from "paper";
 import type { Tool, Style } from "./types";
+import { applyStyle } from "../engine/style";
 
 export type ShapeKind = "rect" | "ellipse" | "line" | "polygon" | "star";
 
@@ -68,17 +69,13 @@ export class ShapeTool implements Tool {
         break;
       }
     }
+    applyStyle(item, s);
     if (this.kind === "line") {
       // 直線は塗り不可。線が無効なら塗り色を線として使う
+      item.fillColor = null;
       item.strokeColor = new paper.Color(s.stroke ?? s.fill ?? "#000");
       item.strokeWidth = s.strokeWidth;
-    } else {
-      item.fillColor = s.fill ? new paper.Color(s.fill) : null;
-      item.strokeColor = s.stroke ? new paper.Color(s.stroke) : null;
-      item.strokeWidth = s.stroke ? s.strokeWidth : 0;
     }
-    item.strokeCap = s.cap;
-    item.strokeJoin = s.join;
     return item;
   }
 }

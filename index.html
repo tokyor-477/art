@@ -18,6 +18,8 @@
     #toolbar { display: flex; flex-direction: column; gap: 6px; padding: 8px;
       padding-top: calc(8px + env(safe-area-inset-top)); background: #1c1c1f; z-index: 10; }
     .row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .row.scroll { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .row.scroll button { flex-shrink: 0; }
     .row button, .row label.chip { min-width: 44px; min-height: 44px;
       display: inline-flex; align-items: center; justify-content: center; gap: 4px;
       background: #3a3a3f; color: #ddd; border: none; border-radius: 8px;
@@ -66,8 +68,10 @@
     <div id="toolbar">
       <div class="row" id="tools">
         <button data-tool="select">選択</button>
+        <button data-tool="direct">ダイレクト</button>
         <button data-tool="brush" class="on">ブラシ</button>
         <button data-tool="pen">ペン</button>
+        <button data-tool="text">テキスト</button>
         <button data-tool="rect">長方形</button>
         <button data-tool="ellipse">楕円</button>
         <button data-tool="line">直線</button>
@@ -85,6 +89,12 @@
         <span class="lbl">塗り</span>
         <input type="checkbox" id="fill-on" checked />
         <input type="color" id="fill-color" value="#111111" />
+        <select id="fill-type" title="塗りの種類">
+          <option value="solid">単色</option>
+          <option value="linear">線形グラデ</option>
+          <option value="radial">円形グラデ</option>
+        </select>
+        <input type="color" id="fill-color2" value="#0ea5e9" title="グラデ終点色" />
         <span class="lbl">線</span>
         <input type="checkbox" id="stroke-on" />
         <input type="color" id="stroke-color" value="#111111" />
@@ -100,6 +110,21 @@
           <option value="miter">尖角</option>
           <option value="bevel">面取</option>
         </select>
+        <span class="lbl">破線</span>
+        <input type="checkbox" id="dash" />
+        <span class="lbl">不透明度</span>
+        <input type="range" id="opacity" min="0" max="100" value="100" />
+        <select id="blend" title="描画モード">
+          <option value="normal">通常</option>
+          <option value="multiply">乗算</option>
+          <option value="screen">スクリーン</option>
+          <option value="overlay">オーバーレイ</option>
+          <option value="darken">比較(暗)</option>
+          <option value="lighten">比較(明)</option>
+          <option value="difference">差の絶対値</option>
+        </select>
+        <span class="lbl">文字</span>
+        <input type="number" id="font-size" min="6" max="400" step="1" value="32" />
         <span class="sep"></span>
         <span class="lbl">ブラシ</span>
         <input type="range" id="size" min="1" max="60" value="8" />
@@ -107,6 +132,39 @@
         <span class="sep"></span>
         <div id="swatches"></div>
         <button id="swatch-add" title="現在の塗り色を登録">＋</button>
+      </div>
+      <div class="row scroll" id="actions">
+        <button id="act-group">グループ</button>
+        <button id="act-ungroup">解除</button>
+        <span class="sep"></span>
+        <button id="act-unite">合体</button>
+        <button id="act-subtract">前面型抜き</button>
+        <button id="act-intersect">交差</button>
+        <button id="act-exclude">中マド</button>
+        <span class="sep"></span>
+        <button id="act-mask">マスク</button>
+        <span class="sep"></span>
+        <button id="act-dup">複製</button>
+        <button id="act-copy">コピー</button>
+        <button id="act-paste">貼付</button>
+        <button id="act-delete">削除</button>
+        <span class="sep"></span>
+        <button id="act-align-l">左揃え</button>
+        <button id="act-align-cx">左右中央</button>
+        <button id="act-align-r">右揃え</button>
+        <button id="act-align-t">上揃え</button>
+        <button id="act-align-cy">上下中央</button>
+        <button id="act-align-b">下揃え</button>
+        <button id="act-dist-h">横等分</button>
+        <button id="act-dist-v">縦等分</button>
+        <span class="sep"></span>
+        <button id="act-flip-h">左右反転</button>
+        <button id="act-flip-v">上下反転</button>
+        <button id="act-shear-h">シアー横</button>
+        <button id="act-shear-v">シアー縦</button>
+        <span class="sep"></span>
+        <button id="act-smooth">スムーズ</button>
+        <button id="act-simplify">簡略化</button>
       </div>
     </div>
     <div id="main">

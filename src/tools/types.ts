@@ -11,8 +11,13 @@ export interface Tool {
 /** 塗り/線の現在スタイル(パネルから取得) */
 export interface Style {
   fill: string | null;
+  fill2: string; // グラデーション終点色
+  fillType: "solid" | "linear" | "radial";
   stroke: string | null;
   strokeWidth: number;
   cap: string;
   join: string;
+  opacity: number; // 0〜1
+  blend: string;
+  dash: boolean;
 }

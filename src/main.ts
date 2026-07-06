@@ -3,15 +3,22 @@ import type { Tool } from "./tools/types";
 import { Brush } from "./tools/brush";
 import { ShapeTool, type ShapeKind } from "./tools/shape";
 import { SelectTool } from "./tools/select";
+import { DirectSelectTool } from "./tools/direct";
 import { PenTool } from "./tools/pen";
+import { TextTool } from "./tools/text";
 import { EyedropperTool } from "./tools/eyedropper";
 import { attachPointerInput } from "./input/pointer";
 import { History } from "./engine/history";
+import { applyStyle } from "./engine/style";
+import { getSelection, onSelectionChange } from "./engine/selection";
+import { drawSelectionHandles } from "./engine/handles";
 import { saveDoc, loadDoc } from "./store/db";
 import {
   setupPanels, refreshLayers, docLayers,
-  currentStyle, currentBrushColor, currentBrushSize, setPickedColors,
+  currentStyle, currentBrushColor, currentBrushSize, currentFontSize,
+  setPickedColors, onStyleChange,
 } from "./ui/panels";
+import { setupActions } from "./ui/actions";
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 paper.setup(canvas);
@@ -36,10 +43,13 @@ const brushTool: Tool = {
 };
 
 const selectTool = new SelectTool(commit);
+const directTool = new DirectSelectTool(commit);
 const tools: Record<string, Tool> = {
   brush: brushTool,
   select: selectTool,
+  direct: directTool,
   pen: new PenTool(currentStyle, commit),
+  text: new TextTool(currentStyle, currentFontSize, commit),
   eyedropper: new EyedropperTool(setPickedColors),
 };
 for (const kind of ["rect", "ellipse", "line", "polygon", "star"] as ShapeKind[]) {
@@ -52,10 +62,12 @@ function setTool(name: string) {
   activeTool = tools[name] ?? brushTool;
 }
 
+onSelectionChange(drawSelectionHandles);
+
 // --- 自動保存: 履歴が動くたびに1秒デバウンスで IndexedDB へ ---
 
 let saveTimer = 0;
-history.onRestore = () => selectTool.reset(); // 参照が無効になるため
+history.onRestore = () => { selectTool.reset(); directTool.reset(); }; // 参照が無効になるため
 history.onChange = () => {
   refreshLayers();
   clearTimeout(saveTimer);
@@ -83,6 +95,17 @@ setupPanels({
   onRedo: () => history.redo(),
   onDocChange: commit,
   onToolChange: setTool,
+});
+
+setupActions(commit);
+
+// スタイル変更を選択中アイテムに反映
+onStyleChange(() => {
+  const items = getSelection();
+  if (!items.length) return;
+  const s = currentStyle();
+  for (const it of items) applyStyle(it, s);
+  commit();
 });
 
 // 起動時に前回のドキュメントを復元
