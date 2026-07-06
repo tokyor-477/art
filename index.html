@@ -58,9 +58,13 @@
       text-overflow: ellipsis; white-space: nowrap; }
     .layer-row button { min-width: 34px; min-height: 40px; background: #3a3a3f;
       border: none; border-radius: 6px; color: #ddd; font-size: 13px; }
-    #layer-actions { display: flex; gap: 6px; }
-    #layer-actions button { flex: 1; min-height: 44px; background: #3a3a3f;
-      border: none; border-radius: 8px; color: #ddd; font-size: 14px; }
+    #layer-actions, #artboard-actions { display: flex; gap: 6px; }
+    #layer-actions button, #artboard-actions button { flex: 1; min-height: 44px;
+      background: #3a3a3f; border: none; border-radius: 8px; color: #ddd; font-size: 14px; }
+    .panel-list { display: flex; flex-direction: column; gap: 4px; }
+    .panel-list button { min-height: 44px; background: #2e2e33; border: none;
+      border-radius: 8px; color: #ddd; font-size: 13px; text-align: left; padding: 0 10px; }
+    .panel-list button.on { outline: 2px solid #2563eb; }
   </style>
 </head>
 <body>
@@ -83,6 +87,7 @@
         <button id="redo" title="やり直し">↪︎</button>
         <button id="export-svg">SVG</button>
         <button id="export-png">PNG</button>
+        <button id="export-pdf">PDF</button>
         <button id="clear">全消去</button>
       </div>
       <div class="row">
@@ -127,6 +132,13 @@
         <input type="number" id="font-size" min="6" max="400" step="1" value="32" />
         <span class="sep"></span>
         <span class="lbl">ブラシ</span>
+        <select id="brush-preset" title="ブラシ種類">
+          <option value="standard">標準</option>
+          <option value="calligraphy">カリグラフィ</option>
+          <option value="marker">マーカー</option>
+          <option value="pencil">鉛筆</option>
+          <option value="pattern">パターン(点描)</option>
+        </select>
         <input type="range" id="size" min="1" max="60" value="8" />
         <span id="size-label">8</span>
         <span class="sep"></span>
@@ -165,6 +177,8 @@
         <span class="sep"></span>
         <button id="act-smooth">スムーズ</button>
         <button id="act-simplify">簡略化</button>
+        <span class="sep"></span>
+        <button id="symbol-add">シンボル登録</button>
       </div>
     </div>
     <div id="main">
@@ -175,6 +189,15 @@
         <div id="layer-actions">
           <button id="layer-add">＋</button>
           <button id="layer-del">削除</button>
+        </div>
+        <h3>シンボル</h3>
+        <div id="symbol-list" class="panel-list"></div>
+        <h3>アートボード</h3>
+        <div id="artboard-list" class="panel-list"></div>
+        <div id="artboard-actions">
+          <button id="artboard-add">＋</button>
+          <button id="artboard-del">削除</button>
+          <button id="artboard-export">書出</button>
         </div>
       </div>
     </div>

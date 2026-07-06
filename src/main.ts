@@ -15,10 +15,13 @@ import { drawSelectionHandles } from "./engine/handles";
 import { saveDoc, loadDoc } from "./store/db";
 import {
   setupPanels, refreshLayers, docLayers,
-  currentStyle, currentBrushColor, currentBrushSize, currentFontSize,
+  currentStyle, currentBrushColor, currentBrushSize, currentBrushPreset, currentFontSize,
   setPickedColors, onStyleChange,
 } from "./ui/panels";
 import { setupActions } from "./ui/actions";
+import { setupSymbols, refreshSymbols } from "./ui/symbols";
+import { setupArtboards, refreshArtboards } from "./ui/artboards";
+import type { BrushPreset } from "./tools/brush";
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 paper.setup(canvas);
@@ -30,11 +33,12 @@ const commit = () => history.snapshot();
 
 // --- ツール ---
 
-const brush = new Brush({ color: "#111111", size: 8 });
+const brush = new Brush({ color: "#111111", size: 8, preset: "standard" });
 const brushTool: Tool = {
   begin(x, y, p) {
     brush.settings.color = currentBrushColor();
     brush.settings.size = currentBrushSize();
+    brush.settings.preset = currentBrushPreset() as BrushPreset;
     brush.begin(x, y, p);
   },
   move: (x, y, p) => brush.move(x, y, p),
@@ -70,6 +74,8 @@ let saveTimer = 0;
 history.onRestore = () => { selectTool.reset(); directTool.reset(); }; // 参照が無効になるため
 history.onChange = () => {
   refreshLayers();
+  refreshSymbols();
+  refreshArtboards();
   clearTimeout(saveTimer);
   saveTimer = window.setTimeout(() => {
     const json = history.current();
@@ -98,6 +104,8 @@ setupPanels({
 });
 
 setupActions(commit);
+setupSymbols(commit);
+setupArtboards(commit);
 
 // スタイル変更を選択中アイテムに反映
 onStyleChange(() => {

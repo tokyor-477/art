@@ -23,9 +23,9 @@ function download(blob: Blob, filename: string) {
   URL.revokeObjectURL(a.href);
 }
 
-/** ドキュメントのレイヤー(GUIレイヤーを除く) */
+/** ドキュメントのレイヤー(GUI・アートボードレイヤーを除く) */
 export function docLayers(): paper.Layer[] {
-  return paper.project.layers.filter((l) => l.name !== "__gui");
+  return paper.project.layers.filter((l) => l.name !== "__gui" && l.name !== "__artboards");
 }
 
 export function setupPanels(cb: PanelCallbacks) {
@@ -58,6 +58,25 @@ export function setupPanels(cb: PanelCallbacks) {
     (paper.view.element as HTMLCanvasElement).toBlob((b) => {
       if (b) download(b, "drawing.png");
     });
+  };
+
+  $("export-pdf").onclick = async () => {
+    const svgEl = withGuiHidden(() =>
+      paper.project.exportSVG({ bounds: "content" }) as SVGElement,
+    );
+    // jspdf+svg2pdfは重いので動的import(初回のみロード、SWがキャッシュ)
+    // paperが稀に stroke-width="none" 等の不正値を吐き、svg2pdfがNaNで落ちるため除去
+    for (const el of svgEl.querySelectorAll("[stroke-width]")) {
+      if (isNaN(parseFloat(el.getAttribute("stroke-width")!))) {
+        el.setAttribute("stroke-width", "0");
+      }
+    }
+    const [{ jsPDF }] = await Promise.all([import("jspdf"), import("svg2pdf.js")]);
+    const w = Number(svgEl.getAttribute("width")) || 800;
+    const h = Number(svgEl.getAttribute("height")) || 600;
+    const doc = new jsPDF({ unit: "pt", format: [w, h], orientation: w > h ? "l" : "p" });
+    await doc.svg(svgEl, { x: 0, y: 0, width: w, height: h });
+    doc.save("drawing.pdf");
   };
 
   $("layer-add").onclick = () => {
@@ -141,6 +160,9 @@ export function currentBrushColor(): string {
 }
 export function currentBrushSize(): number {
   return Number(input("size").value);
+}
+export function currentBrushPreset(): string {
+  return $<HTMLSelectElement>("brush-preset").value;
 }
 
 // --- スウォッチ ---

@@ -10,9 +10,11 @@
   },
   "dependencies": {
     "idb": "^8.0.0",
+    "jspdf": "^4.2.1",
     "paper": "^0.12.18",
     "perfect-freehand": "^1.2.2",
-    "simplify-js": "^1.2.4"
+    "simplify-js": "^1.2.4",
+    "svg2pdf.js": "^2.7.0"
   },
   "devDependencies": {
     "typescript": "^5.6.0",

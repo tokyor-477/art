@@ -2,18 +2,49 @@ import paper from "paper";
 import { getStroke } from "perfect-freehand";
 import simplify from "simplify-js";
 
+export type BrushPreset = "standard" | "calligraphy" | "marker" | "pencil" | "pattern";
+
 export interface BrushSettings {
   color: string;
   size: number;
+  preset: BrushPreset;
 }
 
 interface Pt { x: number; y: number; pressure: number }
 
+// プリセットごとの perfect-freehand パラメータ
+const PRESETS: Record<Exclude<BrushPreset, "pattern">, {
+  options: Parameters<typeof getStroke>[1];
+  sizeMul: number;
+  opacity: number;
+}> = {
+  standard: {
+    options: { thinning: 0.6, smoothing: 0.5, streamline: 0.5 },
+    sizeMul: 1, opacity: 1,
+  },
+  calligraphy: {
+    // 強い筆圧変化+入り抜きテーパーで筆感を出す
+    options: {
+      thinning: 0.9, smoothing: 0.7, streamline: 0.6,
+      start: { taper: 40 }, end: { taper: 40 },
+    },
+    sizeMul: 1.2, opacity: 1,
+  },
+  marker: {
+    options: { thinning: 0, smoothing: 0.6, streamline: 0.5 },
+    sizeMul: 1.6, opacity: 0.55,
+  },
+  pencil: {
+    options: { thinning: 0.35, smoothing: 0.35, streamline: 0.3 },
+    sizeMul: 0.5, opacity: 0.9,
+  },
+};
+
 // 筆圧フリーハンドブラシ。perfect-freehand で輪郭ポリゴンを生成し、
-// 塗りつぶしパスとして Paper.js に載せる。
+// 塗りつぶしパスとして Paper.js に載せる。pattern はスタンプ(点描)配置。
 export class Brush {
   private pts: Pt[] = [];
-  private preview: paper.Path | null = null;
+  private preview: paper.Item | null = null;
   private dirty = false;
   private raf = 0;
 
@@ -32,20 +63,20 @@ export class Brush {
     this.dirty = true;
   }
 
-  /** 確定パスを返す(空ストロークなら null) */
-  end(): paper.Path | null {
+  /** 確定アイテムを返す(空ストロークなら null) */
+  end(): paper.Item | null {
     cancelAnimationFrame(this.raf);
     this.raf = 0;
     if (!this.pts.length) return null;
-    // 点を軽く間引いてからストローク輪郭を確定(simplifyはpressureを保持したまま点を抽出する)
+    // 点を軽く間引いてから確定(simplifyはpressureを保持したまま点を抽出する)
     const pts = this.pts.length > 4
       ? (simplify(this.pts, 0.4, true) as Pt[])
       : this.pts;
-    const path = this.buildPath(pts);
+    const item = this.build(pts);
     this.preview?.remove();
     this.preview = null;
     this.pts = [];
-    return path;
+    return item;
   }
 
   cancel() {
@@ -61,23 +92,22 @@ export class Brush {
     if (!this.pts.length) return;
     if (this.dirty) {
       this.dirty = false;
-      const p = this.buildPath(this.pts);
+      const p = this.build(this.pts);
       this.preview?.remove();
       this.preview = p;
     }
     this.raf = requestAnimationFrame(this.tick);
   };
 
-  private buildPath(pts: Pt[]): paper.Path {
+  private build(pts: Pt[]): paper.Item {
+    if (this.settings.preset === "pattern") return this.buildPattern(pts);
+    const p = PRESETS[this.settings.preset];
     const outline = getStroke(
-      pts.map((p) => [p.x, p.y, p.pressure]),
+      pts.map((pt) => [pt.x, pt.y, pt.pressure]),
       {
-        // ズームしても線の太さが画面上でなくキャンバス上で一定になるよう project 座標で生成
-        size: this.settings.size,
-        thinning: 0.6,       // 筆圧→太さの効き
-        smoothing: 0.5,
-        streamline: 0.5,     // 手ぶれ補正
-        simulatePressure: pts.every((p) => p.pressure === 0.5), // マウス等、筆圧なし入力のとき
+        size: this.settings.size * p.sizeMul,
+        simulatePressure: pts.every((pt) => pt.pressure === 0.5), // 筆圧なし入力(マウス等)
+        ...p.options,
       },
     );
     const path = new paper.Path({
@@ -86,6 +116,40 @@ export class Brush {
       fillColor: this.settings.color,
       insert: true,
     });
+    path.opacity = p.opacity;
     return path;
+  }
+
+  /** パターンブラシ: ストロークに沿って等間隔にスタンプ(線分内も補間) */
+  private buildPattern(pts: Pt[]): paper.Item {
+    const spacing = this.settings.size * 1.4;
+    const group = new paper.Group();
+    this.stamp(group, pts[0]);
+    let carry = spacing; // 次のスタンプまでの残距離
+    for (let i = 1; i < pts.length; i++) {
+      const a = pts[i - 1];
+      const b = pts[i];
+      const len = Math.hypot(b.x - a.x, b.y - a.y);
+      if (len < 1e-6) continue;
+      let pos = carry;
+      while (pos <= len) {
+        const t = pos / len;
+        this.stamp(group, {
+          x: a.x + (b.x - a.x) * t,
+          y: a.y + (b.y - a.y) * t,
+          pressure: a.pressure + (b.pressure - a.pressure) * t,
+        });
+        pos += spacing;
+      }
+      carry = pos - len;
+    }
+    return group;
+  }
+
+  private stamp(group: paper.Group, pt: Pt) {
+    const r = (this.settings.size / 2) * (0.4 + pt.pressure * 0.8);
+    const c = new paper.Path.Circle({ center: [pt.x, pt.y], radius: Math.max(r, 0.5) });
+    c.fillColor = new paper.Color(this.settings.color);
+    group.addChild(c);
   }
 }
