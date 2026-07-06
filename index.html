@@ -4,90 +4,103 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <title>art — vector drawing</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { height: 100%; overflow: hidden; overscroll-behavior: none;
-      font-family: -apple-system, system-ui, sans-serif; background: #2a2a2e; color: #ddd;
+      font-family: -apple-system, system-ui, sans-serif;
+      background: #ffffff; color: #1f2937;
       -webkit-user-select: none; user-select: none; }
     #app { display: flex; flex-direction: column; height: 100dvh; }
 
-    /* ツールバー: iPad の指でも押しやすいサイズ */
-    #toolbar { display: flex; flex-direction: column; gap: 6px; padding: 8px;
-      padding-top: calc(8px + env(safe-area-inset-top)); background: #1c1c1f; z-index: 10; }
+    /* ===== 上部バー ===== */
+    #topbar { background: #ffffff; border-bottom: 1px solid #e4e4e7;
+      padding: 6px 10px; padding-top: calc(6px + env(safe-area-inset-top));
+      display: flex; flex-direction: column; gap: 6px; z-index: 10; }
     .row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-    .row.scroll { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .row.scroll button { flex-shrink: 0; }
-    .row button, .row label.chip { min-width: 44px; min-height: 44px;
+
+    button { min-width: 44px; min-height: 44px;
       display: inline-flex; align-items: center; justify-content: center; gap: 4px;
-      background: #3a3a3f; color: #ddd; border: none; border-radius: 8px;
-      font-size: 14px; padding: 0 10px; touch-action: manipulation; }
-    .row button:active { background: #5a5a66; }
-    .row button.on { background: #2563eb; color: #fff; }
-    .row input[type="color"] { width: 40px; height: 40px; border: none;
-      border-radius: 8px; background: none; padding: 0; }
-    .row input[type="range"] { width: 90px; }
-    .row input[type="number"] { width: 56px; min-height: 40px; background: #3a3a3f;
-      color: #ddd; border: none; border-radius: 8px; font-size: 15px; padding: 0 8px; }
-    .row select { min-height: 40px; background: #3a3a3f; color: #ddd; border: none;
-      border-radius: 8px; font-size: 14px; padding: 0 6px; }
-    .row .lbl { font-size: 12px; opacity: .6; }
-    #size-label { font-size: 13px; opacity: .7; min-width: 20px; text-align: center; }
-    .sep { width: 1px; height: 32px; background: #3a3a3f; margin: 0 2px; }
+      background: #f4f4f5; color: #1f2937; border: 1px solid #e4e4e7; border-radius: 8px;
+      font-size: 13px; padding: 0 10px; touch-action: manipulation; cursor: pointer; }
+    button:active { background: #e4e4e7; }
+    button.on { background: #2563eb; border-color: #2563eb; color: #fff; }
+    button:disabled { opacity: .35; }
+
+    input[type="color"] { width: 40px; height: 40px; border: 1px solid #e4e4e7;
+      border-radius: 8px; background: #fff; padding: 2px; }
+    input[type="range"] { width: 90px; accent-color: #2563eb; }
+    input[type="checkbox"] { width: 20px; height: 20px; accent-color: #2563eb; }
+    input[type="number"] { width: 58px; min-height: 40px; background: #fff;
+      color: #1f2937; border: 1px solid #e4e4e7; border-radius: 8px;
+      font-size: 15px; padding: 0 8px; }
+    select { min-height: 40px; background: #fff; color: #1f2937;
+      border: 1px solid #e4e4e7; border-radius: 8px; font-size: 13px; padding: 0 6px; }
+    .lbl { font-size: 12px; color: #6b7280; }
+    .sep { width: 1px; height: 30px; background: #e4e4e7; margin: 0 4px; }
+    #size-label { font-size: 13px; color: #6b7280; min-width: 20px; text-align: center; }
 
     /* スウォッチ */
     #swatches { display: flex; gap: 4px; flex-wrap: wrap; }
-    #swatches button { min-width: 32px; min-height: 32px; width: 32px; height: 32px;
-      padding: 0; border-radius: 6px; border: 1px solid #555; }
+    #swatches button { min-width: 30px; min-height: 30px; width: 30px; height: 30px;
+      padding: 0; border-radius: 6px; border: 1px solid #d4d4d8; }
+    #swatch-add { min-width: 30px; min-height: 30px; padding: 0; }
 
-    #main { flex: 1; display: flex; min-height: 0; position: relative; }
-    #canvas { flex: 1; min-width: 0; touch-action: none; display: block; background: #46464c; }
-    #layers { flex-shrink: 0; }
+    /* ===== 中央 3カラム ===== */
+    #main { flex: 1; display: flex; min-height: 0; }
 
-    /* レイヤーパネル */
-    #layers { width: 210px; background: #1c1c1f; padding: 8px; overflow-y: auto;
-      display: flex; flex-direction: column; gap: 6px; }
-    #layers h3 { font-size: 13px; opacity: .6; font-weight: 600; }
-    #layer-list { display: flex; flex-direction: column-reverse; gap: 4px; }
+    /* 左: ツールレール */
+    #tools { width: 88px; flex-shrink: 0; background: #fafafa;
+      border-right: 1px solid #e4e4e7; padding: 8px 6px;
+      display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+    #tools button { width: 100%; min-height: 48px; padding: 0 4px; font-size: 12px; }
+
+    /* 中央: キャンバス */
+    #canvas { flex: 1; min-width: 0; touch-action: none; display: block; background: #e8e8ec; }
+
+    /* 右: 機能パネル */
+    #side { width: 236px; flex-shrink: 0; background: #fafafa;
+      border-left: 1px solid #e4e4e7; overflow-y: auto; padding: 8px;
+      display: flex; flex-direction: column; gap: 4px; }
+    #side details { border-bottom: 1px solid #ececee; padding-bottom: 8px; }
+    #side summary { font-size: 12px; font-weight: 600; color: #6b7280;
+      padding: 10px 4px; cursor: pointer; list-style: none; display: flex; align-items: center; }
+    #side summary::before { content: "▸"; margin-right: 6px; font-size: 10px; transition: transform .15s; }
+    #side details[open] summary::before { transform: rotate(90deg); }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+    .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
+    .grid2 button, .grid3 button { padding: 0 4px; font-size: 12px; }
+
+    /* レイヤー行 */
+    #layer-list { display: flex; flex-direction: column-reverse; gap: 4px; margin-bottom: 6px; }
     .layer-row { display: flex; align-items: center; gap: 4px; padding: 4px;
-      border-radius: 8px; background: #2e2e33; min-height: 48px; }
-    .layer-row.active { outline: 2px solid #2563eb; }
+      border-radius: 8px; background: #ffffff; border: 1px solid #e4e4e7; min-height: 48px; }
+    .layer-row.active { border-color: #2563eb; box-shadow: 0 0 0 1px #2563eb; }
     .layer-row .name { flex: 1; font-size: 13px; overflow: hidden;
       text-overflow: ellipsis; white-space: nowrap; }
-    .layer-row button { min-width: 34px; min-height: 40px; background: #3a3a3f;
-      border: none; border-radius: 6px; color: #ddd; font-size: 13px; }
-    #layer-actions, #artboard-actions { display: flex; gap: 6px; }
-    #layer-actions button, #artboard-actions button { flex: 1; min-height: 44px;
-      background: #3a3a3f; border: none; border-radius: 8px; color: #ddd; font-size: 14px; }
-    .panel-list { display: flex; flex-direction: column; gap: 4px; }
-    .panel-list button { min-height: 44px; background: #2e2e33; border: none;
-      border-radius: 8px; color: #ddd; font-size: 13px; text-align: left; padding: 0 10px; }
-    .panel-list button.on { outline: 2px solid #2563eb; }
+    .layer-row button { min-width: 34px; min-height: 40px; padding: 0; font-size: 12px; }
+    #layer-actions, #artboard-actions { display: flex; gap: 4px; }
+    #layer-actions button, #artboard-actions button { flex: 1; }
+
+    .panel-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 6px; }
+    .panel-list button { justify-content: flex-start; text-align: left; }
+    .panel-list button.on { background: #eff6ff; border-color: #2563eb; color: #1d4ed8; }
   </style>
 </head>
 <body>
   <div id="app">
-    <div id="toolbar">
-      <div class="row" id="tools">
-        <button data-tool="select">選択</button>
-        <button data-tool="direct">ダイレクト</button>
-        <button data-tool="brush" class="on">ブラシ</button>
-        <button data-tool="pen">ペン</button>
-        <button data-tool="text">テキスト</button>
-        <button data-tool="rect">長方形</button>
-        <button data-tool="ellipse">楕円</button>
-        <button data-tool="line">直線</button>
-        <button data-tool="polygon">多角形</button>
-        <button data-tool="star">星</button>
-        <button data-tool="eyedropper">スポイト</button>
+    <div id="topbar">
+      <div class="row">
+        <button id="undo" title="取り消し">↩︎ 戻す</button>
+        <button id="redo" title="やり直し">↪︎ 進む</button>
         <span class="sep"></span>
-        <button id="undo" title="取り消し">↩︎</button>
-        <button id="redo" title="やり直し">↪︎</button>
+        <span class="lbl">書き出し</span>
         <button id="export-svg">SVG</button>
         <button id="export-png">PNG</button>
         <button id="export-pdf">PDF</button>
+        <span class="sep"></span>
         <button id="clear">全消去</button>
       </div>
       <div class="row">
@@ -100,11 +113,11 @@
           <option value="radial">円形グラデ</option>
         </select>
         <input type="color" id="fill-color2" value="#0ea5e9" title="グラデ終点色" />
+        <span class="sep"></span>
         <span class="lbl">線</span>
         <input type="checkbox" id="stroke-on" />
         <input type="color" id="stroke-color" value="#111111" />
-        <span class="lbl">線幅</span>
-        <input type="number" id="stroke-width" min="0.5" max="100" step="0.5" value="2" />
+        <input type="number" id="stroke-width" min="0.5" max="100" step="0.5" value="2" title="線幅" />
         <select id="cap" title="線端">
           <option value="round">丸端</option>
           <option value="butt">端なし</option>
@@ -117,6 +130,7 @@
         </select>
         <span class="lbl">破線</span>
         <input type="checkbox" id="dash" />
+        <span class="sep"></span>
         <span class="lbl">不透明度</span>
         <input type="range" id="opacity" min="0" max="100" value="100" />
         <select id="blend" title="描画モード">
@@ -128,8 +142,6 @@
           <option value="lighten">比較(明)</option>
           <option value="difference">差の絶対値</option>
         </select>
-        <span class="lbl">文字</span>
-        <input type="number" id="font-size" min="6" max="400" step="1" value="32" />
         <span class="sep"></span>
         <span class="lbl">ブラシ</span>
         <select id="brush-preset" title="ブラシ種類">
@@ -141,67 +153,114 @@
         </select>
         <input type="range" id="size" min="1" max="60" value="8" />
         <span id="size-label">8</span>
+        <span class="lbl">文字</span>
+        <input type="number" id="font-size" min="6" max="400" step="1" value="32" />
         <span class="sep"></span>
         <div id="swatches"></div>
         <button id="swatch-add" title="現在の塗り色を登録">＋</button>
       </div>
-      <div class="row scroll" id="actions">
-        <button id="act-group">グループ</button>
-        <button id="act-ungroup">解除</button>
-        <span class="sep"></span>
-        <button id="act-unite">合体</button>
-        <button id="act-subtract">前面型抜き</button>
-        <button id="act-intersect">交差</button>
-        <button id="act-exclude">中マド</button>
-        <span class="sep"></span>
-        <button id="act-mask">マスク</button>
-        <span class="sep"></span>
-        <button id="act-dup">複製</button>
-        <button id="act-copy">コピー</button>
-        <button id="act-paste">貼付</button>
-        <button id="act-delete">削除</button>
-        <span class="sep"></span>
-        <button id="act-align-l">左揃え</button>
-        <button id="act-align-cx">左右中央</button>
-        <button id="act-align-r">右揃え</button>
-        <button id="act-align-t">上揃え</button>
-        <button id="act-align-cy">上下中央</button>
-        <button id="act-align-b">下揃え</button>
-        <button id="act-dist-h">横等分</button>
-        <button id="act-dist-v">縦等分</button>
-        <span class="sep"></span>
-        <button id="act-flip-h">左右反転</button>
-        <button id="act-flip-v">上下反転</button>
-        <button id="act-shear-h">シアー横</button>
-        <button id="act-shear-v">シアー縦</button>
-        <span class="sep"></span>
-        <button id="act-smooth">スムーズ</button>
-        <button id="act-simplify">簡略化</button>
-        <span class="sep"></span>
-        <button id="symbol-add">シンボル登録</button>
-        <button id="act-mesh">メッシュ風</button>
-        <button id="act-trace">画像トレース</button>
-        <input type="file" id="trace-file" accept="image/*" hidden />
-      </div>
     </div>
+
     <div id="main">
+      <div id="tools">
+        <button data-tool="select">選択</button>
+        <button data-tool="direct">ダイレクト</button>
+        <button data-tool="brush" class="on">ブラシ</button>
+        <button data-tool="pen">ペン</button>
+        <button data-tool="text">テキスト</button>
+        <button data-tool="rect">長方形</button>
+        <button data-tool="ellipse">楕円</button>
+        <button data-tool="line">直線</button>
+        <button data-tool="polygon">多角形</button>
+        <button data-tool="star">星</button>
+        <button data-tool="eyedropper">スポイト</button>
+      </div>
+
       <canvas id="canvas"></canvas>
-      <div id="layers">
-        <h3>レイヤー</h3>
-        <div id="layer-list"></div>
-        <div id="layer-actions">
-          <button id="layer-add">＋</button>
-          <button id="layer-del">削除</button>
-        </div>
-        <h3>シンボル</h3>
-        <div id="symbol-list" class="panel-list"></div>
-        <h3>アートボード</h3>
-        <div id="artboard-list" class="panel-list"></div>
-        <div id="artboard-actions">
-          <button id="artboard-add">＋</button>
-          <button id="artboard-del">削除</button>
-          <button id="artboard-export">書出</button>
-        </div>
+
+      <div id="side">
+        <details open>
+          <summary>レイヤー</summary>
+          <div id="layer-list"></div>
+          <div id="layer-actions">
+            <button id="layer-add">＋</button>
+            <button id="layer-del">削除</button>
+          </div>
+        </details>
+
+        <details open>
+          <summary>オブジェクト</summary>
+          <div class="grid2">
+            <button id="act-group">グループ</button>
+            <button id="act-ungroup">解除</button>
+            <button id="act-dup">複製</button>
+            <button id="act-delete">削除</button>
+            <button id="act-copy">コピー</button>
+            <button id="act-paste">貼付</button>
+            <button id="act-mask">マスク</button>
+            <button id="symbol-add">シンボル化</button>
+          </div>
+        </details>
+
+        <details>
+          <summary>パスファインダー</summary>
+          <div class="grid2">
+            <button id="act-unite">合体</button>
+            <button id="act-subtract">前面型抜き</button>
+            <button id="act-intersect">交差</button>
+            <button id="act-exclude">中マド</button>
+          </div>
+        </details>
+
+        <details>
+          <summary>整列・分布</summary>
+          <div class="grid3">
+            <button id="act-align-l">左</button>
+            <button id="act-align-cx">中央</button>
+            <button id="act-align-r">右</button>
+            <button id="act-align-t">上</button>
+            <button id="act-align-cy">中央</button>
+            <button id="act-align-b">下</button>
+            <button id="act-dist-h">横等分</button>
+            <button id="act-dist-v">縦等分</button>
+          </div>
+        </details>
+
+        <details>
+          <summary>変形</summary>
+          <div class="grid2">
+            <button id="act-flip-h">左右反転</button>
+            <button id="act-flip-v">上下反転</button>
+            <button id="act-shear-h">シアー横</button>
+            <button id="act-shear-v">シアー縦</button>
+          </div>
+        </details>
+
+        <details>
+          <summary>パス</summary>
+          <div class="grid2">
+            <button id="act-smooth">スムーズ</button>
+            <button id="act-simplify">簡略化</button>
+            <button id="act-mesh">メッシュ風</button>
+            <button id="act-trace">画像トレース</button>
+          </div>
+          <input type="file" id="trace-file" accept="image/*" hidden />
+        </details>
+
+        <details>
+          <summary>シンボル</summary>
+          <div id="symbol-list" class="panel-list"></div>
+        </details>
+
+        <details>
+          <summary>アートボード</summary>
+          <div id="artboard-list" class="panel-list"></div>
+          <div id="artboard-actions">
+            <button id="artboard-add">＋</button>
+            <button id="artboard-del">削除</button>
+            <button id="artboard-export">書出</button>
+          </div>
+        </details>
       </div>
     </div>
   </div>
