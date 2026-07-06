@@ -7,6 +7,7 @@ import { DirectSelectTool } from "./tools/direct";
 import { PenTool } from "./tools/pen";
 import { TextTool } from "./tools/text";
 import { EyedropperTool } from "./tools/eyedropper";
+import { Eraser } from "./tools/eraser";
 import { attachPointerInput } from "./input/pointer";
 import { History } from "./engine/history";
 import { applyStyle } from "./engine/style";
@@ -55,6 +56,7 @@ const tools: Record<string, Tool> = {
   pen: new PenTool(currentStyle, commit),
   text: new TextTool(currentStyle, currentFontSize, commit),
   eyedropper: new EyedropperTool(setPickedColors),
+  eraser: new Eraser(currentBrushSize, commit),
 };
 for (const kind of ["rect", "ellipse", "line", "polygon", "star"] as ShapeKind[]) {
   tools[kind] = new ShapeTool(kind, currentStyle, commit);
