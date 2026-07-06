@@ -115,16 +115,14 @@ npm run build   # 型チェック + 本番ビルド → dist/
 
 ### 本番用(ホーム画面のアプリとして使う)
 
-Service Worker(オフライン機能)は HTTPS が必須のため、無料の静的ホスティングにデプロイします。以下は Cloudflare Pages の例(Netlify / Vercel / GitHub Pages でも同様):
+**本番 URL: https://art01-d8d.pages.dev**
+(Cloudflare Pages が GitHub `tokyor-477/art` の `main` ブランチと連携済み。`git push` するだけで自動ビルド&デプロイされます)
 
-1. `npm run build` で `dist/` に本番ビルドを生成
-2. Cloudflare Pages にデプロイ:
-   - [dash.cloudflare.com](https://dash.cloudflare.com) → Workers & Pages → Create → Pages
-   - 「Direct Upload」で `dist/` フォルダをアップロード(または GitHub 連携で自動デプロイ)
-   - `https://<プロジェクト名>.pages.dev` が発行される
-3. iPad の Safari でその URL を開く
-4. **共有ボタン → 「ホーム画面に追加」** でアプリ化
-5. 以後はホーム画面のアイコンから全画面で起動でき、一度読み込めばオフラインでも動作します
+1. iPad の Safari で https://art01-d8d.pages.dev を開く
+2. 画面上部(または下部)の **共有ボタン(□に↑)** をタップ
+3. メニューを下にスクロールして **「ホーム画面に追加」** をタップ
+4. 名前(例: art)を確認して右上の **「追加」**
+5. 以後はホーム画面のアイコンから全画面アプリとして起動。一度起動すれば機内モードでもオフラインで動作します(作品は端末内に自動保存)
 
 ### (任意)ネイティブアプリ化
 
