@@ -14,35 +14,47 @@
     #app { display: flex; flex-direction: column; height: 100dvh; }
 
     /* ツールバー: iPad の指でも押しやすいサイズ */
-    #toolbar { display: flex; align-items: center; gap: 8px; padding: 8px;
-      padding-top: calc(8px + env(safe-area-inset-top)); background: #1c1c1f;
-      flex-wrap: wrap; z-index: 10; }
-    #toolbar button, #toolbar label { min-width: 44px; min-height: 44px;
-      display: inline-flex; align-items: center; justify-content: center;
+    #toolbar { display: flex; flex-direction: column; gap: 6px; padding: 8px;
+      padding-top: calc(8px + env(safe-area-inset-top)); background: #1c1c1f; z-index: 10; }
+    .row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .row button, .row label.chip { min-width: 44px; min-height: 44px;
+      display: inline-flex; align-items: center; justify-content: center; gap: 4px;
       background: #3a3a3f; color: #ddd; border: none; border-radius: 8px;
-      font-size: 15px; padding: 0 12px; touch-action: manipulation; }
-    #toolbar button:active { background: #5a5a66; }
-    #toolbar button.on { background: #2563eb; color: #fff; }
-    #toolbar input[type="color"] { width: 44px; height: 44px; border: none;
+      font-size: 14px; padding: 0 10px; touch-action: manipulation; }
+    .row button:active { background: #5a5a66; }
+    .row button.on { background: #2563eb; color: #fff; }
+    .row input[type="color"] { width: 40px; height: 40px; border: none;
       border-radius: 8px; background: none; padding: 0; }
-    #toolbar input[type="range"] { width: 100px; }
-    #size-label { font-size: 13px; opacity: .7; min-width: 24px; text-align: center; }
+    .row input[type="range"] { width: 90px; }
+    .row input[type="number"] { width: 56px; min-height: 40px; background: #3a3a3f;
+      color: #ddd; border: none; border-radius: 8px; font-size: 15px; padding: 0 8px; }
+    .row select { min-height: 40px; background: #3a3a3f; color: #ddd; border: none;
+      border-radius: 8px; font-size: 14px; padding: 0 6px; }
+    .row .lbl { font-size: 12px; opacity: .6; }
+    #size-label { font-size: 13px; opacity: .7; min-width: 20px; text-align: center; }
+    .sep { width: 1px; height: 32px; background: #3a3a3f; margin: 0 2px; }
+
+    /* スウォッチ */
+    #swatches { display: flex; gap: 4px; flex-wrap: wrap; }
+    #swatches button { min-width: 32px; min-height: 32px; width: 32px; height: 32px;
+      padding: 0; border-radius: 6px; border: 1px solid #555; }
 
     #main { flex: 1; display: flex; min-height: 0; position: relative; }
-    #canvas { flex: 1; touch-action: none; display: block; background: #46464c; }
+    #canvas { flex: 1; min-width: 0; touch-action: none; display: block; background: #46464c; }
+    #layers { flex-shrink: 0; }
 
     /* レイヤーパネル */
-    #layers { width: 200px; background: #1c1c1f; padding: 8px; overflow-y: auto;
+    #layers { width: 210px; background: #1c1c1f; padding: 8px; overflow-y: auto;
       display: flex; flex-direction: column; gap: 6px; }
     #layers h3 { font-size: 13px; opacity: .6; font-weight: 600; }
     #layer-list { display: flex; flex-direction: column-reverse; gap: 4px; }
-    .layer-row { display: flex; align-items: center; gap: 6px; padding: 6px;
-      border-radius: 8px; background: #2e2e33; min-height: 44px; }
+    .layer-row { display: flex; align-items: center; gap: 4px; padding: 4px;
+      border-radius: 8px; background: #2e2e33; min-height: 48px; }
     .layer-row.active { outline: 2px solid #2563eb; }
-    .layer-row .name { flex: 1; font-size: 14px; overflow: hidden;
+    .layer-row .name { flex: 1; font-size: 13px; overflow: hidden;
       text-overflow: ellipsis; white-space: nowrap; }
-    .layer-row button { min-width: 36px; min-height: 36px; background: #3a3a3f;
-      border: none; border-radius: 6px; color: #ddd; font-size: 14px; }
+    .layer-row button { min-width: 34px; min-height: 40px; background: #3a3a3f;
+      border: none; border-radius: 6px; color: #ddd; font-size: 13px; }
     #layer-actions { display: flex; gap: 6px; }
     #layer-actions button { flex: 1; min-height: 44px; background: #3a3a3f;
       border: none; border-radius: 8px; color: #ddd; font-size: 14px; }
@@ -51,14 +63,50 @@
 <body>
   <div id="app">
     <div id="toolbar">
-      <input type="color" id="color" value="#111111" title="色" />
-      <input type="range" id="size" min="1" max="60" value="8" />
-      <span id="size-label">8</span>
-      <button id="undo" title="取り消し">↩︎</button>
-      <button id="redo" title="やり直し">↪︎</button>
-      <button id="export-svg">SVG</button>
-      <button id="export-png">PNG</button>
-      <button id="clear">全消去</button>
+      <div class="row" id="tools">
+        <button data-tool="select">選択</button>
+        <button data-tool="brush" class="on">ブラシ</button>
+        <button data-tool="pen">ペン</button>
+        <button data-tool="rect">長方形</button>
+        <button data-tool="ellipse">楕円</button>
+        <button data-tool="line">直線</button>
+        <button data-tool="polygon">多角形</button>
+        <button data-tool="star">星</button>
+        <button data-tool="eyedropper">スポイト</button>
+        <span class="sep"></span>
+        <button id="undo" title="取り消し">↩︎</button>
+        <button id="redo" title="やり直し">↪︎</button>
+        <button id="export-svg">SVG</button>
+        <button id="export-png">PNG</button>
+        <button id="clear">全消去</button>
+      </div>
+      <div class="row">
+        <span class="lbl">塗り</span>
+        <input type="checkbox" id="fill-on" checked />
+        <input type="color" id="fill-color" value="#111111" />
+        <span class="lbl">線</span>
+        <input type="checkbox" id="stroke-on" />
+        <input type="color" id="stroke-color" value="#111111" />
+        <span class="lbl">線幅</span>
+        <input type="number" id="stroke-width" min="0.5" max="100" step="0.5" value="2" />
+        <select id="cap" title="線端">
+          <option value="round">丸端</option>
+          <option value="butt">端なし</option>
+          <option value="square">角端</option>
+        </select>
+        <select id="join" title="角">
+          <option value="round">丸角</option>
+          <option value="miter">尖角</option>
+          <option value="bevel">面取</option>
+        </select>
+        <span class="sep"></span>
+        <span class="lbl">ブラシ</span>
+        <input type="range" id="size" min="1" max="60" value="8" />
+        <span id="size-label">8</span>
+        <span class="sep"></span>
+        <div id="swatches"></div>
+        <button id="swatch-add" title="現在の塗り色を登録">＋</button>
+      </div>
     </div>
     <div id="main">
       <canvas id="canvas"></canvas>
