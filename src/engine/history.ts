@@ -27,6 +27,7 @@ export class History {
     paper.project.clear();
     resetGui();
     paper.project.importJSON(this.stack[i]);
+    paper.project.deselectAll(); // JSONに残った選択状態を消す
     // importJSON後もアクティブレイヤーを維持(なければ最後のレイヤー)
     const layer = paper.project.layers.find((l) => l.name === activeName);
     (layer ?? paper.project.layers[paper.project.layers.length - 1])?.activate();

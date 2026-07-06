@@ -11,9 +11,17 @@ export function getSelection(): paper.Item[] {
 }
 
 export function setSelection(list: paper.Item[]) {
-  for (const it of items) { it.selected = false; if (it instanceof paper.Path) it.fullySelected = false; }
+  for (const it of items) {
+    it.selected = false;
+    if (it instanceof paper.Group) it.bounds.selected = false;
+    if (it instanceof paper.Path) it.fullySelected = false;
+  }
   items = list.filter((i) => i.isInserted());
-  for (const it of items) it.selected = true;
+  for (const it of items) {
+    // グループは子全部の輪郭が出て煩いので外接枠のみ
+    if (it instanceof paper.Group) it.bounds.selected = true;
+    else it.selected = true;
+  }
   listener?.();
 }
 

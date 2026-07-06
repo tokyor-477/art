@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "idb": "^8.0.0",
+    "imagetracerjs": "^1.2.6",
     "jspdf": "^4.2.1",
     "paper": "^0.12.18",
     "perfect-freehand": "^1.2.2",

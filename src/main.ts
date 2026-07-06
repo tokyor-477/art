@@ -121,6 +121,7 @@ loadDoc().then((json) => {
   if (json) {
     paper.project.clear();
     paper.project.importJSON(json);
+    paper.project.deselectAll(); // JSONに残った選択状態を消す
     docLayers().at(-1)?.activate();
   }
   history.snapshot(); // 初期状態を履歴の底に積む
